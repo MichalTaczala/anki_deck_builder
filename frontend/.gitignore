@@ -1,2 +1,5 @@
 .env*
 Makefile
+node_modules
+.next/
+.swc/
