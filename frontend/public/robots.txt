@@ -1,0 +1,13 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://memohill.com/sitemap.xml
+
+# Disallow admin and api routes
+Disallow: /api/
+Disallow: /admin/
+
+# Crawl-delay for all bots
+Crawl-delay: 10 

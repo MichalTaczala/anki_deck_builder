@@ -2,26 +2,29 @@ import { useState, FormEvent } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 
 interface DeckData {
-  nativeLanguage: string;
-  foreignLanguage: string;
-  languageLevel: string;
-  topic?: string;
+  level: string;
+  number_of_words: number;
+  topic: string;
+  native_language: string;
+  foreign_language: string;
+  email: string;
 }
 
 function App() {
   const [formData, setFormData] = useState<DeckData>({
-    nativeLanguage: '',
-    foreignLanguage: '',
-    languageLevel: 'A1',
+    level: 'A1',
+    number_of_words: 10,
     topic: '',
+    native_language: '',
+    foreign_language: '',
+    email: '',
   });
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch('YOUR_API_ENDPOINT', {
+      const response = await fetch(`${process.env.BACKEND_URL}/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,18 +33,19 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create deck');
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to create checkout session')
       }
 
-      toast.success('Deck creation request sent successfully!');
-      setFormData({
-        nativeLanguage: '',
-        foreignLanguage: '',
-        languageLevel: 'A1',
-        topic: '',
-      });
+      const { url } = await response.json()
+      if (!url) {
+        throw new Error('No checkout URL received')
+      }
+      
+      window.location.href = url // Redirect to Stripe Checkout
     } catch (error) {
-      toast.error('Failed to create deck. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to create checkout session')
+      console.error('Error:', error)
     }
   };
 
@@ -60,45 +64,60 @@ function App() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-6">
                 <div className="group">
-                  <label htmlFor="nativeLanguage" className="block text-sm font-medium text-white mb-2">
-                    Native Language
+                  <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    required
+                    className="block w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="your@email.com"
+                  />
+                </div>
+
+                <div className="group">
+                  <label htmlFor="native_language" className="block text-sm font-medium text-white mb-2">
+                    Native language
                   </label>
                   <input
                     type="text"
-                    id="nativeLanguage"
+                    id="native_language"
                     required
                     className="block w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
-                    value={formData.nativeLanguage}
-                    onChange={(e) => setFormData({ ...formData, nativeLanguage: e.target.value })}
+                    value={formData.native_language}
+                    onChange={(e) => setFormData({ ...formData, native_language: e.target.value })}
                     placeholder="e.g., English"
                   />
                 </div>
 
                 <div className="group">
-                  <label htmlFor="foreignLanguage" className="block text-sm font-medium text-white mb-2">
-                    Foreign Language
+                  <label htmlFor="foreign_language" className="block text-sm font-medium text-white mb-2">
+                    Language I want to learn
                   </label>
                   <input
                     type="text"
-                    id="foreignLanguage"
+                    id="foreign_language"
                     required
                     className="block w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
-                    value={formData.foreignLanguage}
-                    onChange={(e) => setFormData({ ...formData, foreignLanguage: e.target.value })}
+                    value={formData.foreign_language}
+                    onChange={(e) => setFormData({ ...formData, foreign_language: e.target.value })}
                     placeholder="e.g., Spanish"
                   />
                 </div>
 
                 <div className="group">
-                  <label htmlFor="languageLevel" className="block text-sm font-medium text-white mb-2">
+                  <label htmlFor="level" className="block text-sm font-medium text-white mb-2">
                     Language Level
                   </label>
                   <select
-                    id="languageLevel"
+                    id="level"
                     required
                     className="block w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
-                    value={formData.languageLevel}
-                    onChange={(e) => setFormData({ ...formData, languageLevel: e.target.value })}
+                    value={formData.level}
+                    onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                   >
                     <option value="A1" className="text-gray-900">A1 (Beginner)</option>
                     <option value="A2" className="text-gray-900">A2 (Elementary)</option>
@@ -110,12 +129,29 @@ function App() {
                 </div>
 
                 <div className="group">
+                  <label htmlFor="number_of_words" className="block text-sm font-medium text-white mb-2">
+                    Number of Words
+                  </label>
+                  <input
+                    type="number"
+                    id="number_of_words"
+                    required
+                    min="1"
+                    max="100"
+                    className="block w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
+                    value={formData.number_of_words}
+                    onChange={(e) => setFormData({ ...formData, number_of_words: parseInt(e.target.value) })}
+                  />
+                </div>
+
+                <div className="group">
                   <label htmlFor="topic" className="block text-sm font-medium text-white mb-2">
-                    Topic (Optional)
+                    Topic
                   </label>
                   <input
                     type="text"
                     id="topic"
+                    required
                     className="block w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
                     value={formData.topic}
                     onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
