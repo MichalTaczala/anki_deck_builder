@@ -2,3 +2,72 @@
 anki-deck-builder*
 Makefile
 
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+.env.*  # Optional: Ignore environment-specific .env files like .env.development
+
+# macOS
+.DS_Store
+
+# VS Code settings
+.vscode/
+
+# Pytest
+.cache/
+*.cover
+coverage.xml
+htmlcov/
+
+# MyPy
+.mypy_cache/
+
+# PyInstaller
+*.spec
+dist/
+build/
+
+# pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# SQLite DB files
+*.sqlite3
+
+# Logs
+*.log
+
+# Uvicorn/Pid files
+*.pid
+
+# Docker
+*.tar
+*.img
+*.container
+*.bak
+*.tmp
+.dockerignore
+
+# Optional: FastAPI static/media upload folders
+/staticfiles/
+/media/
+
+# __pypackages__ for PEP 582 support
+__pypackages__/
+
+# Editor swap files
+*.swp
+*.swo
+
+# Local settings or secrets (customize as needed)
+local_settings.py
+secrets.py
