@@ -7,6 +7,16 @@ const nextConfig = {
     return config
   },
   output: 'standalone',
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.google.com',
+        port: '',
+        pathname: '/favicon.ico',
+      },
+    ],
+  },
   async rewrites() {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
     return [
@@ -18,4 +28,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig
