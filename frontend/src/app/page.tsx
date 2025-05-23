@@ -3,19 +3,35 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { config } from '@/config'
+import { useSession, signIn } from 'next-auth/react'
+import { redirect } from 'next/navigation'
 
 export default function Home() {
+  const { data: session, status } = useSession()
   const [level, setLevel] = useState('B2')
   const [topic, setTopic] = useState('')
   const [nativeLanguage, setNativeLanguage] = useState('')
   const [foreignLanguage, setForeignLanguage] = useState('')
-  const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  if (status === 'loading') {
+    return (
+      <main className="min-h-screen p-8 gradient-animate">
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white"></div>
+        </div>
+      </main>
+    )
+  }
+
+  if (!session) {
+    redirect('/auth/signin')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!level || !nativeLanguage || !foreignLanguage || !email) {
+    if (!level || !nativeLanguage || !foreignLanguage) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -34,7 +50,7 @@ export default function Home() {
           topic: topic || 'general',
           native_language: nativeLanguage,
           foreign_language: foreignLanguage,
-          email,
+          email: session.user?.email,
         }),
       })
 
@@ -48,7 +64,7 @@ export default function Home() {
         throw new Error('No checkout URL received')
       }
       
-      window.location.href = data.url // Redirect to Stripe Checkout
+      window.location.href = data.url
     } catch (error) {
       console.error('Error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to create checkout session')
@@ -60,37 +76,25 @@ export default function Home() {
   return (
     <main className="min-h-screen p-8 gradient-animate">
       <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-            MemoHill
-          </h1>
-          <p className="text-white/80 text-lg mb-6">
-            Create personalized language learning flashcards with AI
-          </p>
-          <div className="space-y-4 text-white/70 text-sm">
-            <p>✓ Compatible with Anki and other flashcard apps</p>
-            <p>✓ 200 carefully selected words per deck</p>
-            <p>✓ Perfect for students, travelers, and language enthusiasts</p>
+        <div className="flex justify-between items-center mb-12">
+          <div>
+            <h1 className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+              MemoHill
+            </h1>
+            <p className="text-white/80 text-lg">
+              Welcome, {session.user?.name}!
+            </p>
           </div>
+          <button
+            onClick={() => signIn('google')}
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            Switch Account
+          </button>
         </div>
         
         <div className="glass-effect rounded-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2 text-white/90">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-field"
-                placeholder="your@email.com"
-                required
-              />
-            </div>
-
             <div>
               <label htmlFor="nativeLanguage" className="block text-sm font-medium mb-2 text-white/90">
                 Native language
@@ -184,4 +188,4 @@ export default function Home() {
       </div>
     </main>
   )
-} 
+}
