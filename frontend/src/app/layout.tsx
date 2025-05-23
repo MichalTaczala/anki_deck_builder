@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import './globals.css'
 import JsonLd from '@/components/JsonLd'
 import InitializeApp from '@/components/InitializeApp'
+import { AuthProvider } from '@/components/AuthProvider'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -109,10 +110,12 @@ export default function RootLayout({
         <JsonLd />
       </head>
       <body className={inter.className}>
-        <InitializeApp />
-        {children}
-        <Toaster />
+        <AuthProvider>
+          <InitializeApp />
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   )
-} 
+}
