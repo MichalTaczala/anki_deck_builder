@@ -4,6 +4,9 @@ import { Toaster } from 'react-hot-toast'
 import './globals.css'
 import JsonLd from '@/components/JsonLd'
 import InitializeApp from '@/components/InitializeApp'
+import SessionProviderWrapper from './SessionProviderWrapper'
+
+// Setting up Google login with NextAuth. Implementation will be in NextAuth config and API route files.
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -23,12 +26,27 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://memohill.com'),
   title: {
-    default: 'MemoHill - AI-Powered Language Learning Flashcards',
-    template: '%s | MemoHill'
+    default: 'MemoHill - Anki Cards Generator for Language Learning | Create Anki Decks',
+    template: '%s | MemoHill - Anki Cards Generator for Language Learning'
   },
-  description: 'Create personalized language learning flashcards with AI. Compatible with Anki and other flashcard apps. Learn languages faster with MemoHill.',
-  keywords: ['language learning', 'flashcards', 'anki', 'AI flashcards', 'language study', 'memorization', 'spaced repetition'],
-  authors: [{ name: 'MemoHill' }],
+  description: 'Create language learning flashcards for Anki with Anki Cards Generator. Choose your level, language and topic and get cards generated for your needs.',
+  keywords: [
+    'language learning',
+    'flashcards',
+    'anki',
+    'AI flashcards',
+    'language study',
+    'memorization',
+    'spaced repetition',
+    'language learning app',
+    'flashcard generator',
+    'anki cards generator',
+    'anki deck creator',
+    'language flashcards',
+    'vocabulary builder',
+    'language learning tool'
+  ],
+  authors: [{ name: 'MemoHill', url: 'https://memohill.com' }],
   creator: 'MemoHill',
   publisher: 'MemoHill',
   formatDetection: {
@@ -41,21 +59,21 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://memohill.com',
     siteName: 'MemoHill',
-    title: 'MemoHill - AI-Powered Language Learning Flashcards',
-    description: 'Create personalized language learning flashcards with AI. Compatible with Anki and other flashcard apps.',
+    title: 'MemoHill - Anki Cards Generator',
+    description: 'Create personalized language learning flashcards with Anki Cards Generator. Anki cards generation with one click of a button. Perfect for language learners, students, and teachers.',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'MemoHill - AI-Powered Language Learning Flashcards'
+        alt: 'MemoHill - Anki Cards Generator'
       }
     ]
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MemoHill - AI-Powered Language Learning Flashcards',
-    description: 'Create personalized language learning flashcards with AI. Compatible with Anki and other flashcard apps.',
+    title: 'MemoHill - Anki Cards Generator',
+    description: 'Create personalized language learning flashcards with Anki Cards Generator. Anki cards generation with one click of a button. Perfect for language learners, students, and teachers.',
     images: ['/og-image.jpg'],
     creator: '@memohill'
   },
@@ -72,9 +90,6 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://memohill.com',
-    languages: {
-      'en-US': 'https://memohill.com',
-    },
   },
   manifest: '/manifest.json',
   appleWebApp: {
@@ -88,6 +103,9 @@ export const metadata: Metadata = {
   },
 }
 
+const shareUrl = 'https://memohill.com'
+const title = 'Check out MemoHill - Anki Cards Generator for Language Learning!'
+
 export default function RootLayout({
   children,
 }: {
@@ -96,22 +114,26 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="canonical" href="https://memohill.com" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.png" type="image/png" />
         <meta name="theme-color" content="#6366f1" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="MemoHill" />
         <meta name="application-name" content="MemoHill" />
         <meta name="msapplication-TileColor" content="#6366f1" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
+        {/* <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JsonLd) }} /> */}
         <JsonLd />
       </head>
       <body className={inter.className}>
         <InitializeApp />
-        {children}
+        
+        <SessionProviderWrapper>
+          {children}
+        </SessionProviderWrapper>
         <Toaster />
+        
       </body>
     </html>
   )

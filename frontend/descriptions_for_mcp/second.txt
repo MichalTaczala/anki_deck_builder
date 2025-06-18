@@ -1,0 +1,56 @@
+# MemoHill Frontend Functional Requirements
+
+## 1. Authentication (Google Login)
+
+* **FR-1.1**: Integrate Google OAuth via GCP.
+* **FR-1.2**: “Log in with Google” button on hero / header.
+* **FR-1.3**: Persist user session using existing ENV vars (e.g. `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `NEXTAUTH_URL`).
+* **FR-1.4**: Graceful error states on login failure.
+
+## 2. Deck Persistence & Retrieval
+
+* **FR-2.1**: On successful login, call `GET /api/decks` to fetch user’s previously generated decks (mocked JSON).
+* **FR-2.2**: Display deck list in sidebar or a new “My Decks” page.
+* **FR-2.3**: Clicking a deck loads its details (language pair, level, card type).
+
+## 3. Re-Generate Deck
+
+* **FR-3.1**: “Generate New Deck” button in “My Decks” view.
+* **FR-3.2**: Invoke `POST /api/decks/regenerate` with `{ deckId }`.
+* **FR-3.3**: Show loading state; display new deck when ready.
+
+## 4. Edit Card Type
+
+* **FR-4.1**: In deck details, provide “Edit Card Type” control (dropdown or modal).
+* **FR-4.2**: On change, send `PUT /api/decks/{deckId}/card-type` with `{ cardType }` (endpoint mocked).
+* **FR-4.3**: Reflect updated card type in UI immediately.
+
+## 5. Guest (No-Login) Experience
+
+* **FR-5.1**: Preserve existing single-page deck-generation flow for guests.
+* **FR-5.2**: Hide “My Decks” and Google Login flows when not authenticated.
+
+## 6. Routing & Pages
+
+* **FR-6.1**: Reuse existing Next.js pages/components; avoid duplicating files.
+* **FR-6.2**: New pages:
+
+  * `/login` (if needed)
+  * `/my-decks` (authenticated deck dashboard)
+* **FR-6.3**: Protect `/my-decks` with client-side auth check; redirect to home on unauthenticated access.
+
+## 7. UI & Theming
+
+* **FR-7.1**: Adhere to existing color palette (inspect CSS/Tailwind config).
+* **FR-7.2**: Maintain current typography, spacing, and component styles.
+* **FR-7.3**: Add subtle animations for login and deck loading (Framer Motion optional).
+
+## 8. Configuration & Environment
+
+* **FR-8.1**: Use existing ENV vars for any new endpoints or API keys (`.env.local`).
+* **FR-8.2**: Mock backend responses with hard-coded JSON in development.
+
+## 9. Testing & Validation
+
+* **FR-9.1**: Basic UI smoke tests for login flow, deck list, regenerate, and edit actions.
+* **FR-9.2**: Validate API error handling and display user-friendly messages.

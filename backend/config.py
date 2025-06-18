@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     openai_api_key: str
     frontend_url: str
     gcs_bucket_name: str
+    auth_google_id: str
     gcp_bucket_sa_path: str | None = None
 
     class Config:

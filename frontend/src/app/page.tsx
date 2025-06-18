@@ -3,8 +3,11 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { config } from '@/config'
+import { signIn, signOut, useSession } from 'next-auth/react'
+import SignIn from '@/components/sign-in'
 
 export default function Home() {
+  const { data: session } = useSession();
   const [level, setLevel] = useState('B2')
   const [topic, setTopic] = useState('')
   const [nativeLanguage, setNativeLanguage] = useState('')
@@ -58,130 +61,53 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen p-8 gradient-animate">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-            MemoHill
-          </h1>
-          <p className="text-white/80 text-lg mb-6">
-            Create personalized language learning flashcards with AI
-          </p>
-          <div className="space-y-4 text-white/70 text-sm">
-            <p>✓ Compatible with Anki and other flashcard apps</p>
-            <p>✓ 200 carefully selected words per deck</p>
-            <p>✓ Perfect for students, travelers, and language enthusiasts</p>
-          </div>
+    <>
+      {/* Hero Section */}
+      <section style={{
+        background: 'linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%)',
+        padding: '3.5rem 0 2.5rem 0',
+        color: '#fff',
+        textAlign: 'center',
+        borderRadius: '0 0 2rem 2rem',
+        boxShadow: '0 4px 32px #0001',
+      }}>
+        <h1 style={{ fontSize: '2.8rem', fontWeight: 800, marginBottom: 16, letterSpacing: 1, lineHeight: 1.1 }}>MemoHill – Anki Cards Generator for Language Learning</h1>
+        <p style={{ fontSize: '1.3rem', maxWidth: 700, margin: '0 auto', marginBottom: 18, fontWeight: 500 }}>
+          Create personalized, AI-powered flashcards and Anki decks for any language, topic, or level. Perfect for students, teachers, and self-learners who want to master vocabulary and concepts efficiently.
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 28 }}>
+          <SignIn />
         </div>
-        
-        <div className="glass-effect rounded-2xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2 text-white/90">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-field"
-                placeholder="your@email.com"
-                required
-              />
-            </div>
+      </section>
 
-            <div>
-              <label htmlFor="nativeLanguage" className="block text-sm font-medium mb-2 text-white/90">
-                Native language
-              </label>
-              <input
-                type="text"
-                id="nativeLanguage"
-                value={nativeLanguage}
-                onChange={(e) => setNativeLanguage(e.target.value)}
-                className="input-field"
-                placeholder="e.g., English"
-                required
-              />
-            </div>
+      {/* Main Form Section */}
+      <main className="min-h-screen p-8" style={{ background: '#f8fafc' }}>
+        <div className="max-w-2xl mx-auto">
 
-            <div>
-              <label htmlFor="foreignLanguage" className="block text-sm font-medium mb-2 text-white/90">
-                Language I want to learn
-              </label>
-              <input
-                type="text"
-                id="foreignLanguage"
-                value={foreignLanguage}
-                onChange={(e) => setForeignLanguage(e.target.value)}
-                className="input-field"
-                placeholder="e.g., Spanish"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="level" className="block text-sm font-medium mb-2 text-white/90">
-                Language Level
-              </label>
-              <select
-                id="level"
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="select-field"
-                required
-              >
-                <option value="A1">A1 - Beginner</option>
-                <option value="A2">A2 - Elementary</option>
-                <option value="B1">B1 - Intermediate</option>
-                <option value="B2">B2 - Upper Intermediate</option>
-                <option value="C1">C1 - Advanced</option>
-                <option value="C2">C2 - Mastery</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="topic" className="block text-sm font-medium mb-2 text-white/90">
-                Topic (optional)
-              </label>
-              <input
-                type="text"
-                id="topic"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                className="input-field"
-                placeholder="e.g., Technology, Science, History"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="button-primary"
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Generating...
-                </span>
-              ) : (
-                'Generate Deck'
-              )}
-            </button>
-          </form>
+          {/* SEO/Description Section */}
+          <section style={{ marginTop: 56, background: '#fff', borderRadius: 18, boxShadow: '0 2px 16px #0001', padding: '2.7rem 2rem', color: '#232946', lineHeight: 1.7, fontSize: '1.13rem' }}>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: 18, color: '#6366f1', letterSpacing: 0.5 }}>Why Choose MemoHill for Language Learning?</h2>
+            <p>
+              <strong>MemoHill</strong> is your trusted Anki cards generator and flashcard creator for language learning. Our platform uses advanced AI to help you generate high-quality, personalized flashcards for any language, topic, or proficiency level. Whether you are preparing for exams, expanding your vocabulary, or teaching a new language, MemoHill makes it easy to create Anki decks tailored to your needs.
+            </p>
+            <p style={{ marginTop: 18 }}>
+              With MemoHill, you can:
+            </p>
+            <ul style={{ margin: '14px 0 0 28px', listStyle: 'disc' }}>
+              <li>Generate Anki decks and flashcards for over 50 languages</li>
+              <li>Choose your language, topic, and level for fully customized decks</li>
+              <li>Leverage spaced repetition and AI-powered memorization techniques</li>
+              <li>Download decks compatible with Anki and other flashcard apps</li>
+              <li>Accelerate your language learning with smart, efficient study tools</li>
+              <li>Enjoy a user-friendly interface designed for students, teachers, and self-learners</li>
+              <li>Access your decks anytime, anywhere, and on any device</li>
+            </ul>
+            <p style={{ marginTop: 18 }}>
+              Join thousands of language learners, students, and teachers who trust MemoHill for their vocabulary building and language study. Start creating your Anki cards today and experience the benefits of a smarter, faster, and more effective way to learn languages. MemoHill is your go-to language learning tool, offering AI flashcards, vocabulary builders, and a comprehensive Anki deck creator. Whether you are a beginner or an advanced learner, MemoHill helps you achieve your language goals with ease and confidence.
+            </p>
+          </section>
         </div>
-
-        <div className="mt-12 text-center text-white/60 text-sm">
-          <p>Trusted by language learners worldwide</p>
-          <p className="mt-2">✓ Anki-compatible .apkg files</p>
-          <p>✓ AI-powered vocabulary selection</p>
-          <p>✓ Instant download after purchase</p>
-        </div>
-      </div>
-    </main>
+      </main>
+    </>
   )
-} 
+}

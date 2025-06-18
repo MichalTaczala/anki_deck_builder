@@ -24,7 +24,7 @@ function App() {
     e.preventDefault();
     
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/create-checkout-session`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,9 +54,9 @@ function App() {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold text-white mb-2">
-            Anki Deck Creator
+            MemoHill - Anki Cards Generator for Language Learning
           </h1>
-          <p className="text-white/90">Create personalized language learning decks</p>
+          <p className="text-white/90">Create personalized language learning flashcards with Anki Cards Generator. Anki cards generation with one click of a button. Perfect for language learners, students, and teachers.</p>
         </div>
         
         <div className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-white/30">

@@ -1,0 +1,18 @@
+YI would like to create concise functional requirements for the following application:
+
+The app is called MemoHill and is an Anki Deck generator for language learning.
+
+My Requirements:
+- App is already built and working in its basic version as a single page. I want to add logging in with google.
+- Logged user should have the access to previously generated decks
+- Logged user should be able to generate the new deck of the same type(without typing one more time languages and level)
+- Logged user should be able to edit the Anki card type(it's not yet supported by the backend, but just make some request to de backend to the endpoint that doesn't exist yet)
+- I want to leave the no-logged functionality as it is now. so the user can either create the deck on the spot, or log in and have access to his decks and be able to create more of them.
+- This is only frontend part. If you need new endpoints to backend just make something up and and mock it temporarely with some data.
+- Look at the current code base first. I don't want you to create files that already exist. 
+- Use ENV variables that are being already used in the code.
+- I want to implement google login with GCP.
+- app uses nextjs
+- if you create any new pages or edit the current ones, try to preserve the color pallete that is already in the project.
+
+Output as markdown code.

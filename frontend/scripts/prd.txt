@@ -1,0 +1,148 @@
+<PRD> MemoHill Frontend Functional Requirements
+Introduction
+This document defines the functional requirements, user stories, acceptance criteria, technical constraints and design guidelines for adding authenticated deck management to the MemoHill frontend. It serves as a single source of truth for the engineering, design and QA teams and ensures alignment on scope, behavior and quality expectations.
+
+Product overview
+MemoHill is a language-learning tool that generates study decks. Until now, guests could create a single deck per session. This initiative adds Google-based authentication, persistent storage of decks, deck regeneration and card-type editing—all within the existing Next.js frontend.
+
+Goals and objectives
+
+Enable returning users to securely log in via Google and access their decks.
+
+Persist and retrieve user-generated decks from a mock API.
+
+Offer in-app deck regeneration and card-type editing.
+
+Maintain the guest experience for non-logged-in users.
+
+Reuse existing components and adhere to current theming.
+
+Provide basic smoke tests and error handling to ensure stability.
+
+Target audience
+
+Primary: Language learners who generate multiple decks over time.
+
+Secondary: Casual visitors who generate a deck without logging in.
+
+Stakeholders: Product managers, frontend engineers, QA engineers, UX/UI designers.
+
+Features and requirements
+
+5.1 Authentication (Google login)
+
+ID	Requirement	Notes
+FR-1.1	Integrate Google OAuth via GCP	Use GCP OAuth client configured by NEXT_PUBLIC_GOOGLE_CLIENT_ID.
+FR-1.2	“Log in with Google” button on hero/header	Prominent placement; matches style of existing call-to-action.
+FR-1.3	Persist user session using existing ENV vars	Leverage NEXTAUTH_URL, session cookie under NextAuth.js default.
+FR-1.4	Graceful error states on login failure	Show inline alert with retry option.
+
+5.2 Deck persistence and retrieval
+
+ID	Requirement	Notes
+FR-2.1	On login, call GET /api/decks	Mocked JSON payload with deck metadata.
+FR-2.2	Display deck list in sidebar or /my-decks page	Responsive layout; mobile collapse into hamburger menu.
+FR-2.3	Clicking a deck loads its details	Show language pair, level, card type.
+
+5.3 Re-generate deck
+
+ID	Requirement	Notes
+FR-3.1	“Generate new deck” button in “My Decks” view	Matches style of existing “Create deck” control.
+FR-3.2	Invoke POST /api/decks/regenerate with { deckId }	Display spinner while awaiting response.
+FR-3.3	Show loading state; display new deck when ready	Replace old deck details in UI on success.
+
+5.4 Edit card type
+
+ID	Requirement	Notes
+FR-4.1	In deck details, provide “Edit card type” control	Dropdown or modal matching existing component patterns.
+FR-4.2	On change, send PUT /api/decks/{deckId}/card-type	Payload { cardType }; backend mocked.
+FR-4.3	Reflect updated card type in UI immediately	Optimistic UI update; rollback on error.
+
+5.5 Guest (no-login) experience
+
+FR-5.1: Preserve existing single-page generation for guests.
+
+FR-5.2: Hide “My Decks” link and login controls when unauthenticated.
+
+5.6 Routing and pages
+
+FR-6.1: Reuse existing Next.js pages/components; avoid duplication.
+
+FR-6.2: Add /login (if necessary) and /my-decks pages.
+
+FR-6.3: Protect /my-decks with client-side auth check; redirect guests to home.
+
+5.7 UI and theming
+
+FR-7.1: Adhere to existing Tailwind color palette.
+
+FR-7.2: Maintain current typography, spacing and components.
+
+FR-7.3: Add subtle Framer Motion animations on login and deck load.
+
+5.8 Configuration and environment
+
+FR-8.1: Use existing ENV vars in .env.local for any new endpoints.
+
+FR-8.2: Mock backend responses with hard-coded JSON in development.
+
+5.9 Testing and validation
+
+FR-9.1: Basic UI smoke tests for login, deck list, regenerate, edit flows.
+
+FR-9.2: Validate API error handling; display user-friendly messages.
+
+User stories and acceptance criteria
+
+ID	User story	Acceptance criteria
+ST-101	As an authenticated user, I want to log in with Google so I can access my saved decks.	- “Log in with Google” button appears on header
+- Clicking initiates OAuth
+- On grant, user is redirected back logged in
+ST-102	As an authenticated user, I want to see a list of my decks so I can pick one to review or regenerate.	- On login, GET /api/decks is called
+- Sidebar or /my-decks lists decks by name and metadata
+ST-103	As an authenticated user, I want to regenerate a deck so I can refresh its content.	- Clicking “Generate new deck” calls POST endpoint
+- Loading spinner appears
+- New deck details replace old in UI
+ST-104	As an authenticated user, I want to edit a deck’s card type so I can switch between flashcards and quiz cards.	- In deck details, card-type control is visible
+- Changing option sends PUT request
+- UI updates immediately on success
+ST-105	As a guest user, I want to generate a deck without logging in so I can try the product.	- Primary hero flow remains unchanged for guests.
+- No login button or “My Decks” link is visible
+ST-106	As a user, I want to see error messages if login or API calls fail so I know what to do next.	- On any API error, inline alert shows friendly message and retry option
+ST-107	As a product owner, I want smoke tests for all new UI flows so I can catch regressions early.	- Automated tests cover login, deck list render, regenerate, edit card type
+ST-108	As a developer, I want to model decks in the database so I can store language pair, level and card type.	- Deck entity includes id, userId, sourceLang, targetLang, level, cardType, createdAt, updatedAt fields
+ST-109	As a security-conscious user, I want client-side route protection so my decks aren’t exposed to guests.	- Attempting to access /my-decks when unauthenticated redirects to /
+
+Technical requirements / stack
+
+Framework: Next.js (13.x) with React and NextAuth.js for session management.
+
+Auth: Google OAuth via GCP; configure NEXT_PUBLIC_GOOGLE_CLIENT_ID and NEXTAUTH_URL.
+
+API layer: REST endpoints under /api/decks; all responses mocked in development.
+
+Styling: Tailwind CSS, existing config; Framer Motion for animations (optional).
+
+Testing: Jest with React Testing Library for unit/smoke tests; mock fetch calls.
+
+Environment: Node 18+, .env.local for secrets; Vercel deployment.
+
+Design and user interface
+
+Layout: Sidebar on desktop; hamburger menu collapse on mobile.
+
+Theming: Use existing color variables (primary, secondary, accent) from Tailwind config.
+
+Typography and spacing: Follow existing scale: text-base for body, text-xl for headings; use p-4 spacing.
+
+Components: Reuse Button, Modal, Dropdown from existing component library.
+
+Animations:
+
+Fade-in for /my-decks list items (duration 300ms).
+
+Spinner overlay on regenerate action.
+
+Error states: Inline banners with copy “Something went wrong. Please try again.”
+
+</PRD>

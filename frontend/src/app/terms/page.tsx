@@ -59,7 +59,7 @@ export default function TermsOfService() {
             <p className="text-white/80">
               For any questions regarding these Terms of Service, please contact us at:
               <br />
-              Email: terms@memohill.com
+              Email: radakanis321@gmail.com
             </p>
           </div>
         </div>
