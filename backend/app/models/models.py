@@ -39,3 +39,4 @@ class DeckFirebaseModel(BaseModel):
     version: int
     name_in_storage: str
     added_at: datetime
+    id_in_storage: str

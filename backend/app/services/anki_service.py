@@ -1,3 +1,4 @@
+from io import BytesIO
 import random
 from app.models.models import AnkiCard, DeckModel
 import genanki
@@ -7,7 +8,7 @@ class AnkiService:
     def __init__(self):
         pass
 
-    def generate_anki_deck(self, words: list[AnkiCard], deck_name: str) -> None:
+    def generate_anki_deck(self, deck_model: DeckModel) -> BytesIO:
         # Generate unique model and deck IDs
         model_id = random.randrange(1 << 30, 1 << 31)
         deck_id = random.randrange(1 << 30, 1 << 31)
@@ -48,11 +49,11 @@ class AnkiService:
         # Create a deck
         deck = genanki.Deck(
             deck_id,
-            deck_name
+            deck_model.deck_name
         )
 
         # Add cards
-        for word in words:
+        for word in deck_model.flashcards:
             note = genanki.Note(
                 model=model,
                 fields=[
@@ -65,7 +66,6 @@ class AnkiService:
             deck.add_note(note)
 
         # Generate the Anki package
-        output_filename = f"{deck_name.lower().replace(' ', '_')}.apkg"
         output = BytesIO()
         genanki.Package(deck).write_to_file(output)
         output.seek(0)

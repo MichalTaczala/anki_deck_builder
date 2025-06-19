@@ -8,8 +8,9 @@ class OpenAIService:
     def __init__(self):
         self.client = AsyncOpenAI(api_key=get_settings().openai_api_key)
 
-    async def get_words_from_openai(level: str, number_of_words: int, topic: str,
-                                    native_language: str, foreign_language: str) -> list[AnkiCard]:
+    async def get_words_from_openai(self, level: str, number_of_words: int,
+                                    native_language: str, foreign_language: str, topic: str | None = None,
+                                    ) -> DeckModel:
         """
         Analyze tweets using OpenAI's API to extract insights and patterns.
         """

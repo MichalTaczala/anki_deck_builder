@@ -7,14 +7,14 @@ from google.cloud import storage
 from config import get_settings
 
 
-async def generate_deck(request: DeckRequest, session_id: str):
+async def generate_deck(request: DeckRequest, storage_name: str):
     print(request)
     deck_model = await OpenAIService().get_words_from_openai(request.level,
                                                              request.number_of_words,
-                                                             request.topic,
-                                                             request.native_language,
-                                                             request.foreign_language)
-    deck = AnkiService().generate_anki_deck(deck_model.flashcards, deck_model.deck_name)
+                                                             topic=request.topic,
+                                                             native_language=request.native_language,
+                                                             foreign_language=request.foreign_language)
+    deck = AnkiService().generate_anki_deck(deck_model)
     print(deck)
 
     # Initialize Google Cloud Storage client
@@ -30,8 +30,7 @@ async def generate_deck(request: DeckRequest, session_id: str):
     bucket = storage_client.bucket(get_settings().gcs_bucket_name)
     print(bucket)
     # Generate unique filename
-    filename = f"{deck_model.deck_name.lower().replace(' ', '_')}_{session_id}.apkg"
-    blob = bucket.blob(filename)
+    blob = bucket.blob(storage_name)
 
     # Upload the deck file
     blob.upload_from_string(deck.read(), content_type="application/octet-stream")

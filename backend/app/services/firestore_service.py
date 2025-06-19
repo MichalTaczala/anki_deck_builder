@@ -34,11 +34,11 @@ class FirestoreService:
         email: str,
         deck: DeckFirebaseModel
     ) -> None:
-        decks = self.db.collection("users").where("email", "==", email).collection("decks").get()
-        if not decks:
-            raise ValueError(f"User with email {email} not found")
-        self.db.collection("users").where("email", "==", email).collection("decks").add(deck.json_dump())
-        pass
+        users = self.db.collection("users").get()
+        user = self.db.collection("users").where("email", "==", email).get()
+        decks2 = self.db.collection("users").document(email).collection("decks")
+        d = decks2.get()
+        decks2.add(deck.model_dump())
 
 
 firestore_service = FirestoreService()

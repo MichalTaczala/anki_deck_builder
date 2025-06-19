@@ -3,10 +3,10 @@ import json
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 import stripe
 from google.cloud import storage
-
+import uuid
 from app.models.models import CheckoutRequest, DeckFirebaseModel, DeckRequest
-from app.services import firestore_service
 from app.services.decks_service import generate_deck
+from app.services.firestore_service import FirestoreService
 from config import get_settings
 
 stripe_router = APIRouter()
@@ -33,7 +33,7 @@ async def create_checkout_session(data: CheckoutRequest):
             customer_email=data.email,
             metadata={
                 "level": data.level,
-                "number_of_words": data.number_of_words,
+                "number_of_words": str(data.number_of_words),
                 "topic": data.topic,
                 "native_language": data.native_language,
                 "foreign_language": data.foreign_language,
@@ -59,7 +59,7 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError as e:
+    except stripe.SignatureVerificationError as e:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
     if event["type"] == "checkout.session.completed":
@@ -73,18 +73,27 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
             native_language=session["metadata"]["native_language"],
             foreign_language=session["metadata"]["foreign_language"]
         )
-
+        firestore_service = FirestoreService()
+        id = uuid.uuid4().hex
+        iterator = 1
+        storage_name = f"{
+            deck_request.native_language}_{
+            deck_request.foreign_language}_{
+            deck_request.level}_{iterator}_{id}.apkg"
         background_tasks.add_task(
             firestore_service.add_deck,
             session["customer_email"],
             DeckFirebaseModel(
-                added_at=datetime.now(UTC).isoformat(),
+                added_at=datetime.now(UTC),
                 name=session["customer_email"],
                 language_native=deck_request.native_language,
                 language_foreign=deck_request.foreign_language,
                 level=deck_request.level,
                 version=1,
-                name_in_storage=session_id,))
-        background_tasks.add_task(generate_deck, deck_request, session_id)
+                name_in_storage=storage_name,
+                id_in_storage=id
+            )
+        )
+        background_tasks.add_task(generate_deck, deck_request, storage_name)
         return {"status": "success"}
     return {"status": "error"}
