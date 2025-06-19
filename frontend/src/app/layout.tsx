@@ -4,13 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import './globals.css'
 import JsonLd from '@/components/JsonLd'
 import InitializeApp from '@/components/InitializeApp'
-<<<<<<< HEAD
-import SessionProviderWrapper from './SessionProviderWrapper'
-
-// Setting up Google login with NextAuth. Implementation will be in NextAuth config and API route files.
-=======
 import { AuthProvider } from '@/components/AuthProvider'
->>>>>>> ae4a3d7bb448f4c9fa5732fb0fa4c32fa5c39790
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -131,21 +125,11 @@ export default function RootLayout({
         <JsonLd />
       </head>
       <body className={inter.className}>
-<<<<<<< HEAD
-        <InitializeApp />
-        
-        <SessionProviderWrapper>
-          {children}
-        </SessionProviderWrapper>
-        <Toaster />
-        
-=======
         <AuthProvider>
           <InitializeApp />
           {children}
           <Toaster />
         </AuthProvider>
->>>>>>> ae4a3d7bb448f4c9fa5732fb0fa4c32fa5c39790
       </body>
     </html>
   )

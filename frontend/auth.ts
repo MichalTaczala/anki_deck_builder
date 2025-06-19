@@ -1,7 +1,14 @@
-
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
- 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+
+export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
   providers: [Google],
+  session: {
+    strategy: "jwt"
+  },
+  pages: {
+    signIn: "/auth/signin"
+  },
+  basePath: "/api/auth",
+  trustHost: true
 })
