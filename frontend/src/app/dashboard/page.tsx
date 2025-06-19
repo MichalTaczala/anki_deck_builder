@@ -335,8 +335,11 @@ export default function Dashboard() {
                     border: '1.5px solid #cbd5e1',
                     fontSize: '1.05rem',
                     background: '#fff',
+                    color: '#232946',
                     outline: 'none',
                     transition: 'border 0.2s',
+                    appearance: 'auto',
+                    cursor: 'pointer'
                   }}
                   required
                 >
