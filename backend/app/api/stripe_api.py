@@ -74,12 +74,11 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
             foreign_language=session["metadata"]["foreign_language"]
         )
         firestore_service = FirestoreService()
-        id = uuid.uuid4().hex
         iterator = 1
         storage_name = f"{
             deck_request.native_language}_{
             deck_request.foreign_language}_{
-            deck_request.level}_{iterator}_{id}.apkg"
+            deck_request.level}_{deck_request.topic if deck_request.topic else "general"}_{iterator}.apkg"
         background_tasks.add_task(
             firestore_service.add_deck,
             session["customer_email"],
@@ -89,9 +88,9 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
                 language_native=deck_request.native_language,
                 language_foreign=deck_request.foreign_language,
                 level=deck_request.level,
-                version=1,
+                topic=deck_request.topic,
+                version=iterator,
                 name_in_storage=storage_name,
-                id_in_storage=id
             )
         )
         background_tasks.add_task(generate_deck, deck_request, storage_name)

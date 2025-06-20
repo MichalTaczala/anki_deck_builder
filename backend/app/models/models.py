@@ -6,7 +6,7 @@ class CheckoutRequest(BaseModel):
     email: str
     level: str
     number_of_words: int
-    topic: str
+    topic: str | None = None
     native_language: str
     foreign_language: str
 
@@ -39,4 +39,5 @@ class DeckFirebaseModel(BaseModel):
     version: int
     name_in_storage: str
     added_at: datetime
-    id_in_storage: str
+    id: str | None
+    topic: str | None = None

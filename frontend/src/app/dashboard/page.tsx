@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { config } from '@/config';
 
 interface Deck {
-  id: number;
+  id: number | string;
   name: string;
   category: string;
   createdAt: string;
@@ -14,6 +14,8 @@ interface Deck {
   foreignLanguage?: string;
   level?: string;
   topic?: string;
+  name_in_storage?: string;
+  version?: number;
 }
 
 const LEVELS = [
@@ -28,6 +30,7 @@ const LEVELS = [
 export default function Dashboard() {
   const { data: session } = useSession();
   const userEmail = session?.user?.email || '';
+  const idToken = (session as any)?.idToken;
 
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -41,21 +44,17 @@ export default function Dashboard() {
     topic: '',
   });
   const [formLoading, setFormLoading] = useState(false);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   useEffect(() => {
-    const idToken = (session as any)?.idToken;
     if (!idToken) {
-      // fallback to mock decks if not logged in or no token
-      const mockDecks: Deck[] = [
-        { id: 1, name: 'JLPT N5', category: 'English-Japanese', createdAt: '2024-06-01', nativeLanguage: 'English', foreignLanguage: 'Japanese', level: 'N5', topic: 'JLPT' },
-        { id: 2, name: 'Travel Phrases', category: 'English-Japanese', createdAt: '2024-06-02', nativeLanguage: 'English', foreignLanguage: 'Japanese', level: 'A2', topic: 'Travel' },
-        { id: 3, name: 'Business', category: 'English-Spanish', createdAt: '2024-06-03', nativeLanguage: 'English', foreignLanguage: 'Spanish', level: 'B2', topic: 'Business' },
-      ];
-      setDecks(mockDecks);
-      setCategories(Array.from(new Set(mockDecks.map(d => d.category))));
+      if (session) { // only log if session exists but token doesn't
+        console.log("Session exists, but idToken is missing.");
+      }
       setLoading(false);
       return;
     }
+    
     setLoading(true);
     fetch(`${config.backendUrl}/get-user-decks`, {
       method: 'GET',
@@ -64,10 +63,38 @@ export default function Dashboard() {
       },
     })
       .then(async (response) => {
+        if (response.status === 401) {
+          toast.error("Your session has expired. Please log in again.");
+          signOut({ callbackUrl: '/' });
+          return;
+        }
         if (!response.ok) throw new Error('Failed to fetch decks');
         const data = await response.json();
-        setDecks(data.decks || []);
-        setCategories(Array.from(new Set((data.decks || []).map((d: Deck) => d.category))));
+        console.log('Received data:', data); // For debugging
+
+        const decksToProcess = Array.isArray(data) ? data : (data.decks || []);
+        
+        const formattedDecks = decksToProcess.map((deck: any) => {
+          const nativeLang = deck.language_native.charAt(0).toUpperCase() + deck.language_native.slice(1);
+          const foreignLang = deck.language_foreign.charAt(0).toUpperCase() + deck.language_foreign.slice(1);
+          
+          return {
+            id: deck.id_in_storage,
+            name: `${foreignLang} Deck (${deck.level})`,
+            category: `${nativeLang}-${foreignLang}`,
+            createdAt: new Date(deck.added_at).toISOString().split('T')[0],
+            nativeLanguage: nativeLang,
+            foreignLanguage: foreignLang,
+            level: deck.level,
+            topic: deck.topic || 'General',
+            name_in_storage: deck.name_in_storage,
+            version: deck.version,
+          };
+        });
+        console.log('Formatted decks:', formattedDecks); // For debugging
+
+        setDecks(formattedDecks);
+        setCategories(Array.from(new Set(formattedDecks.map((d: Deck) => d.category))));
       })
       .catch((error) => {
         toast.error(error instanceof Error ? error.message : 'Failed to fetch decks');
@@ -75,11 +102,58 @@ export default function Dashboard() {
       .finally(() => {
         setLoading(false);
       });
-  }, [session]);
+  }, [idToken]);
 
   const filteredDecks = selectedCategory
     ? decks.filter(d => d.category === selectedCategory)
     : decks;
+
+  const handleDownloadDeck = async (deck: Deck) => {
+    if (!idToken) {
+      toast.error('You must be logged in to download decks.');
+      return;
+    }
+    if (!deck.id || typeof deck.id !== 'string') {
+      toast.error('Deck ID is invalid, cannot download.');
+      return;
+    }
+    if (!deck.name_in_storage) {
+      toast.error('Deck file name not available.');
+      return;
+    }
+
+    setDownloading(deck.id);
+    const toastId = toast.loading(`Downloading ${deck.name}...`);
+
+    try {
+      const response = await fetch(`${config.backendUrl}/download-deck/${deck.id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download deck.');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = deck.name_in_storage;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Download complete!', { id: toastId });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'An unknown error occurred.', { id: toastId });
+    } finally {
+      setDownloading(null);
+    }
+  };
 
   // Modal form handlers
   const openCreateModal = () => {
@@ -236,9 +310,39 @@ export default function Dashboard() {
           <ul style={{ marginTop: 12, padding: 0, listStyle: 'none' }}>
             {filteredDecks.map(deck => (
               <li key={deck.id} style={{ marginBottom: 18, padding: 20, background: '#fff', borderRadius: 10, boxShadow: '0 1px 8px #0001', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#232946' }}>{deck.name}</div>
-                <div style={{ fontSize: 13, color: '#6366f1', fontWeight: 500 }}>Category: {deck.category}</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>Created: {deck.createdAt}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#232946' }}>{deck.name}</div>
+                    <div style={{ fontSize: 13, color: '#6366f1', fontWeight: 500 }}>Category: {deck.category}</div>
+                    {deck.topic && deck.topic !== 'General' && (
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>Topic: {deck.topic}</div>
+                    )}
+                    {deck.version && (
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>Version: {deck.version}</div>
+                    )}
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>Created: {deck.createdAt}</div>
+                  </div>
+                  <button
+                    style={{
+                      background: '#059669',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '10px 18px',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s',
+                      whiteSpace: 'nowrap',
+                    }}
+                    onClick={() => handleDownloadDeck(deck)}
+                    disabled={downloading === deck.id}
+                    onMouseOver={e => (e.currentTarget.style.background = '#047857')}
+                    onMouseOut={e => (e.currentTarget.style.background = '#059669')}
+                  >
+                    {downloading === deck.id ? 'Downloading...' : 'Download Deck'}
+                  </button>
+                </div>
                 <button
                   style={{ marginTop: 10, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', alignSelf: 'flex-start', transition: 'background 0.2s' }}
                   onClick={() => setSelectedCategory(deck.category)}
@@ -290,6 +394,7 @@ export default function Dashboard() {
                     border: '1.5px solid #cbd5e1',
                     fontSize: '1.05rem',
                     background: '#fff',
+                    color: '#232946',
                     outline: 'none',
                     transition: 'border 0.2s',
                   }}
@@ -313,6 +418,7 @@ export default function Dashboard() {
                     border: '1.5px solid #cbd5e1',
                     fontSize: '1.05rem',
                     background: '#fff',
+                    color: '#232946',
                     outline: 'none',
                     transition: 'border 0.2s',
                   }}
@@ -365,6 +471,7 @@ export default function Dashboard() {
                     border: '1.5px solid #cbd5e1',
                     fontSize: '1.05rem',
                     background: '#fff',
+                    color: '#232946',
                     outline: 'none',
                     transition: 'border 0.2s',
                   }}

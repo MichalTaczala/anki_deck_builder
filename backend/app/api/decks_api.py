@@ -5,6 +5,7 @@ from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2 import id_token
 from fastapi import APIRouter, Depends, HTTPException, Header, Request
 
+from app.services.gcs_service import GCSService
 from config import get_settings
 
 
@@ -38,3 +39,11 @@ async def get_user_decks(current_user: dict = Depends(get_current_user)):
     decks = firestore_service.get_decks_by_user(current_user["email"])
     print(decks)
     return decks
+
+
+@decks_router.get("/download-deck/{deck_id}")
+async def download_deck(deck_id: str, current_user: dict = Depends(get_current_user)):
+    deck = firestore_service.get_deck_by_id(deck_id, current_user["email"])
+    if not deck:
+        raise HTTPException(status_code=404, detail="Deck not found")
+    return GCSService().get_deck_by_id(deck.name_in_storage)

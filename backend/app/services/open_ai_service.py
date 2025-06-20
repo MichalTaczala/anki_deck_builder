@@ -11,9 +11,7 @@ class OpenAIService:
     async def get_words_from_openai(self, level: str, number_of_words: int,
                                     native_language: str, foreign_language: str, topic: str | None = None,
                                     ) -> DeckModel:
-        """
-        Analyze tweets using OpenAI's API to extract insights and patterns.
-        """
+
         settings = get_settings()
 
         aclient = AsyncOpenAI(api_key=settings.openai_api_key)
