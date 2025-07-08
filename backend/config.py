@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     gcs_bucket_name: str
     auth_google_id: str
     gcp_bucket_sa_path: str | None = None
+    google_project_id: str
 
     class Config:
         env_file = f'.env.{os.getenv("ENV", "dev")}'

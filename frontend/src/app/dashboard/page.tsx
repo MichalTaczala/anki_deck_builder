@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import { config } from '@/config';
+import { redirect } from 'next/navigation';
 
 interface Deck {
-  id: number | string;
+  id: string;
   name: string;
   category: string;
   createdAt: string;
@@ -28,7 +29,12 @@ const LEVELS = [
 ];
 
 export default function Dashboard() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      redirect('/');
+    },
+  });
   const userEmail = session?.user?.email || '';
   const idToken = (session as any)?.idToken;
 
@@ -47,14 +53,7 @@ export default function Dashboard() {
   const [downloading, setDownloading] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!idToken) {
-      if (session) { // only log if session exists but token doesn't
-        console.log("Session exists, but idToken is missing.");
-      }
-      setLoading(false);
-      return;
-    }
-    
+    if (!idToken) return; // Only fetch when idToken is available
     setLoading(true);
     fetch(`${config.backendUrl}/get-user-decks`, {
       method: 'GET',
@@ -71,15 +70,17 @@ export default function Dashboard() {
         if (!response.ok) throw new Error('Failed to fetch decks');
         const data = await response.json();
         console.log('Received data:', data); // For debugging
-
         const decksToProcess = Array.isArray(data) ? data : (data.decks || []);
-        
-        const formattedDecks = decksToProcess.map((deck: any) => {
-          const nativeLang = deck.language_native.charAt(0).toUpperCase() + deck.language_native.slice(1);
-          const foreignLang = deck.language_foreign.charAt(0).toUpperCase() + deck.language_foreign.slice(1);
-          
+        const formattedDecks = decksToProcess.map((deck: any, idx: number) => {
+          // Try to get a unique id from id_in_storage, fallback to name_in_storage, or index as last resort
+          const id =
+            deck.id;
+
+          const nativeLang = deck.language_native?.charAt(0).toUpperCase() + deck.language_native?.slice(1);
+          const foreignLang = deck.language_foreign?.charAt(0).toUpperCase() + deck.language_foreign?.slice(1);
+
           return {
-            id: deck.id_in_storage,
+            id,
             name: `${foreignLang} Deck (${deck.level})`,
             category: `${nativeLang}-${foreignLang}`,
             createdAt: new Date(deck.added_at).toISOString().split('T')[0],
@@ -92,7 +93,6 @@ export default function Dashboard() {
           };
         });
         console.log('Formatted decks:', formattedDecks); // For debugging
-
         setDecks(formattedDecks);
         setCategories(Array.from(new Set(formattedDecks.map((d: Deck) => d.category))));
       })
@@ -102,11 +102,20 @@ export default function Dashboard() {
       .finally(() => {
         setLoading(false);
       });
-  }, [idToken]);
+  }, [idToken, session]);
 
-  const filteredDecks = selectedCategory
+  const filteredDecks = (selectedCategory
     ? decks.filter(d => d.category === selectedCategory)
-    : decks;
+    : decks
+  ).filter(d => d.id);
+
+  if (status === 'loading' || (loading && idToken)) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f1f5f9' }}>
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
 
   const handleDownloadDeck = async (deck: Deck) => {
     if (!idToken) {
@@ -308,8 +317,18 @@ export default function Dashboard() {
           <p style={{ color: '#232946', fontWeight: 500 }}>Loading...</p>
         ) : (
           <ul style={{ marginTop: 12, padding: 0, listStyle: 'none' }}>
-            {filteredDecks.map(deck => (
-              <li key={deck.id} style={{ marginBottom: 18, padding: 20, background: '#fff', borderRadius: 10, boxShadow: '0 1px 8px #0001', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {filteredDecks.map((deck, idx) => {
+              if (!deck.id) {
+                console.warn('Deck is missing a unique id:', deck);
+              }
+              const key =
+                deck.id && deck.version !== undefined
+                  ? `${deck.id}-${deck.version}`
+                  : deck.id
+                  ? `${deck.id}-nover`
+                  : `deck-${idx}`;
+                return (
+                  <li key={key} style={{ marginBottom: 18, padding: 20, background: '#fff', borderRadius: 10, boxShadow: '0 1px 8px #0001', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#232946' }}>{deck.name}</div>
@@ -352,7 +371,8 @@ export default function Dashboard() {
                   View Category
                 </button>
               </li>
-            ))}
+            );
+            })}
           </ul>
         )}
         {/* Modal for creating a new deck (All Decks) */}

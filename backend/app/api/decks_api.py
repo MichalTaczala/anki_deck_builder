@@ -22,8 +22,6 @@ async def get_current_user(request: Request):
     except ValueError:
         raise HTTPException(status_code=401, detail="Invalid Google ID token")
 
-    # At this point, id_info["sub"] is the unique Google user ID,
-    # id_info["email"] is the user’s email, etc.
     return {
         "google_sub": id_info["sub"],
         "email": id_info.get("email"),

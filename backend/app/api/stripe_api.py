@@ -5,7 +5,7 @@ import stripe
 from google.cloud import storage
 import uuid
 from app.models.models import CheckoutRequest, DeckFirebaseModel, DeckRequest
-from app.services.decks_service import generate_deck
+from app.services.decks_service import generate_words_and_deck
 from app.services.firestore_service import FirestoreService
 from config import get_settings
 
@@ -27,7 +27,7 @@ async def create_checkout_session(data: CheckoutRequest):
                 }
             ],
             mode="payment",
-            success_url=get_settings().frontend_url + "/success?session_id={CHECKOUT_SESSION_ID}",
+            success_url=get_settings().frontend_url + "/dashboard",
             cancel_url=get_settings().frontend_url + "/cancel",
             automatic_tax={"enabled": True},
             customer_email=data.email,
@@ -63,8 +63,8 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
     if event["type"] == "checkout.session.completed":
+        print("email:", event["data"]["object"]["customer_email"])
         session = event["data"]["object"]
-        session_id = session["id"]
 
         deck_request = DeckRequest(
             level=session["metadata"]["level"],
@@ -74,13 +74,15 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
             foreign_language=session["metadata"]["foreign_language"]
         )
         firestore_service = FirestoreService()
-        iterator = 1
+        iterator = firestore_service.get_current_number_of_user_decks_of_the_same_type(
+            session["customer_email"], deck_request) + 1
         storage_name = f"{
             deck_request.native_language}_{
             deck_request.foreign_language}_{
             deck_request.level}_{deck_request.topic if deck_request.topic else "general"}_{iterator}.apkg"
+
         background_tasks.add_task(
-            firestore_service.add_deck,
+            firestore_service.add_deck_to_user,
             session["customer_email"],
             DeckFirebaseModel(
                 added_at=datetime.now(UTC),
@@ -93,6 +95,6 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
                 name_in_storage=storage_name,
             )
         )
-        background_tasks.add_task(generate_deck, deck_request, storage_name)
+        background_tasks.add_task(generate_words_and_deck, deck_request, storage_name, iterator)
         return {"status": "success"}
     return {"status": "error"}

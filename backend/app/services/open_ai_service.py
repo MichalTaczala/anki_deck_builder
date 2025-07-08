@@ -1,6 +1,6 @@
 from openai import AsyncOpenAI
 
-from app.models.models import AnkiCard, DeckModel
+from app.models.models import AnkiCard, AnkiCardList, DeckModel, DeckRequest
 from config import get_settings
 
 
@@ -43,3 +43,30 @@ class OpenAIService:
             return res
         except Exception as e:
             raise Exception(f"Error analyzing tweets: {str(e)}")
+
+    async def get_cards_from_words(self, words: list[str], request: DeckRequest) -> AnkiCardList:
+        settings = get_settings()
+
+        aclient = AsyncOpenAI(api_key=settings.openai_api_key)
+        try:
+            response = await aclient.responses.parse(model="gpt-4o-mini", text_format=AnkiCardList, input=[
+                                                                {
+                                                                    "role": "system",
+                                                                    "content": f"""You are a flashcard creator. You need to create flashcards for a user. The native language of the user is {request.native_language} and he wants to learn {request.foreign_language}. His current level of {request.foreign_language} is {request.level}. You need to create {request.number_of_words} flashcards out of these words as words_in_my_foreign_language: {words}.
+
+                                                                    IMPORTANT: Don't use other words. Use all words that are given to you in the list.
+                                                                    IMPORTANT: Use all words that are given to you in the list. The number of words in the list is {len(words)}.
+
+                                                                    Example if the foreign language is english and the native language is polish:
+                                                                    word_in_my_foreign_language: "dog"
+                                                                    description_in_my_foreign_language: "a man's best friend"
+                                                                    translation_in_my_native_language: "pies"
+                                                                    example_sentence_in_my_foreign_language: "The dog is barking."
+                                                                    example_sentence_translation_in_my_native_language: "Pies szczeka."
+                                                                    """},
+
+                                                            ],
+                                                            temperature=0.7, )
+            return response.output_parsed
+        except Exception as e:
+            raise Exception(f"Error creating openai cards: {str(e)}")
